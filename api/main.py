@@ -1,7 +1,12 @@
 from fastapi import FastAPI
+from .database import engine, Base
+from .models import User, Monitor, Check
 
-app = FastAPI()
+# создает таблицы при запуске
+Base.metadata.create_all(bind=engine)
+
+app = FastAPI(title="Uptime Monitoring API")
 
 @app.get("/")
-def read_root():
-    return {"message": "Hello from FastAPI"}
+def home():
+    return {"status": "ok", "message": "работает"}
