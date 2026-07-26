@@ -4,7 +4,7 @@ from pydantic import BaseModel, HttpUrl
 class MonitorBase(BaseModel):
     name: str
     url: HttpUrl
-    interval_seconds: 60
+    interval_seconds: int = 60
 
 
 class MonitorCreate(MonitorBase):
@@ -14,6 +14,6 @@ class MonitorCreate(MonitorBase):
 class MonitorResponse(MonitorBase):
     id: int
     is_active: bool = True
-    
+
     class Config:
         from_attributes = True
