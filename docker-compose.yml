@@ -1,73 +1,95 @@
-version: `'3.8'
+version: '3.8'
+
 services:
-    postgres:
-        image: postgres:15-alpine
-        container_name: monitoring-db
-        environment:
-            POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: monitoring_pass
-            POSTGRES_DB: monitoring_db
-        volumes:
-            -  postgres_data:/var/lib/postgresql/data
-            - ./init.sql:/docker-entrypoint-initdb.d/init.sql 
-        ports:
-            - 5432:5432
-        healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U postgres"]
-            interval: 10s
-            timeout: 5s
-            retries: 5
-        networks:
-            - monitoring-network
-    api:
-        build:
-            context: ./api
-            dockerfile: Dockerfile 
-        container_name: monitoring-api
-        environment:
-            DATABASE_URL: postgres://postgres:monitoring_pass@postgres:5432/monitoring
-            PORT: 8000
-        ports:
-            - 8000:8000
-        depends_on:
-            postgres:
-                condition: service_healthy
-        networks:
-            - monitoring-network
-        restart: unless-stopped
-    sheduler:
-        build:
-            context: ./sheduler
-            dockerfile: Dockerfile
-        container_name: monitoring-sheduler
-        environment:
-            DATABASE_URL: postgres://postgres:monitoring_pass@postgres:5432/monitoring
-        depends_on:
-            postgres:
-                condition: service_healthy
-        networks:
-          - monitoring-network
-        restart: unless-stopped
-    checker:
-        build:
-            context: ./checker
-            dockerfile: Dockerfile
-        container_name: monitoring-checker
-        environment:
-            DATABASE_URL: postgres://postgres:monitoring_pass@postgres:5432/monitoring
-        depends_on:
-            postgres:
-                condition: service_healthy
-        networks:
-          - monitoring-network
-        restart: unless-stopped
-        deploy:
-          replicas: 3
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: monitoring_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: monitoring_pass
+      POSTGRES_DB: monitoring_db  # ✅ Имя БД
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d monitoring_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - monitoring_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: monitoring_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - monitoring_network
+    volumes:
+      - redis_data:/data
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: monitoring_api
+    environment:
+      # ✅ Правильный формат URL
+      DATABASE_URL: postgresql://postgres:monitoring_pass@postgres:5432/monitoring_db
+      PORT: 8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - monitoring_network
+    restart: unless-stopped
+
+  scheduler:  
+    build:
+      context: ./scheduler
+      dockerfile: Dockerfile
+    container_name: monitoring_scheduler
+    environment:
+      DATABASE_URL: postgresql://postgres:monitoring_pass@postgres:5432/monitoring_db
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - monitoring_network
+    restart: unless-stopped
+
+  checker:
+    build:
+      context: ./checker
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://postgres:monitoring_pass@postgres:5432/monitoring_db
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - monitoring_network
+    restart: unless-stopped
 networks:
-    monitoring-network:
-        driver: bridge
+  monitoring_network:
+    driver: bridge
 volumes:
-    postgres_data:
-
-
-            
+  postgres_data:
+  redis_data: 
