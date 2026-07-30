@@ -13,9 +13,10 @@ class User(Base):
 class Monitor(Base):
     __tablename__ = "monitors"
 
+    name = Column(String, nullable=True)
     id = Column(Integer, primary_key=True, index=True)
     url = Column(String, nullable=False)
-    interval = Column(Integer, default=60)
+    interval_seconds = Column(Integer, default=60)
     is_active = Column(Boolean, default=True)
 
 
