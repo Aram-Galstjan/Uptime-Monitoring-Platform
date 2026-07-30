@@ -1,8 +1,12 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker 
+import os
 
 
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:monitoring_pass@localhost:5432/monitoring_db"
+SQLALCHEMY_DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://postgres:monitoring_pass@localhost:5432/monitoring_db",
+)
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL

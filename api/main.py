@@ -1,4 +1,3 @@
-from fastapi import FastAPI
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from .database import engine, Base,  get_db
@@ -11,6 +10,16 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Uptime Monitoring API")
 
 
+@app.get("/")
+def root():
+    return {"status": "ok", "service": "api", "message": "container is running"}
+
+
+@app.get("/health")
+def health():
+    return {"status": "healthy"}
+
+
 @app.post("/monitors", response_model = MonitorResponse)
 def create_monitors(
     monitor: MonitorCreate,
@@ -19,7 +28,7 @@ def create_monitors(
     db_monitor = Monitor(
         name = monitor.name, 
         url = str(monitor.url), 
-        interval = monitor.interval_seconds
+        interval_seconds = monitor.interval_seconds
     )
 
     db.add(db_monitor)
@@ -70,7 +79,7 @@ def update_monitor(
 
     db_monitor.name = monitor_data.name
     db_monitor.url = str(monitor_data.url)
-    db_monitor.interval = monitor_data.interval_seconds
+    db_monitor.interval_seconds = monitor_data.interval_seconds
 
     db.commit()
     db.refresh(db_monitor)
