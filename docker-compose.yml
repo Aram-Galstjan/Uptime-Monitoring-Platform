@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   postgres:
     image: postgres:15-alpine
@@ -33,9 +35,9 @@ services:
     volumes:
       - redis_data:/data
 
-  api:
+  monitors-api:
     build:
-      context: ./api
+      context: ./python-services/monitors
       dockerfile: Dockerfile
     container_name: monitoring_api
     environment:
@@ -43,6 +45,23 @@ services:
       PORT: 8000
     ports:
       - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - monitoring_network
+    restart: unless-stopped
+
+  notifications-api:
+    build:
+      context: ./python-services/notifications
+      dockerfile: Dockerfile
+    container_name: notifications_api
+    environment:
+      DATABASE_URL: postgresql://postgres:monitoring_pass@postgres:5432/monitoring_db
+      PORT: 8001
+    ports:
+      - "8001:8001"
     depends_on:
       postgres:
         condition: service_healthy
