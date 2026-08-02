@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from .database import engine, Base,  get_db
-from .models import User, Monitor, Check
-from .schemas import MonitorBase, MonitorCreate, MonitorResponse
+from app.infrastructure.database import engine, Base,  get_db
+from app.infrastructure.models import User, Monitor, Check
+from app.interfaces.api.schemas import MonitorBase, MonitorCreate, MonitorResponse
 
 # создает таблицы при запуске
 Base.metadata.create_all(bind=engine)

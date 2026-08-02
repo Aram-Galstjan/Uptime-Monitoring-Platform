@@ -1,6 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
-from sqlalchemy.sql import func
-from .database import Base
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, func
+from app.infrastructure.database import Base
 
 
 class NotificationChannel(Base):
@@ -11,7 +10,7 @@ class NotificationChannel(Base):
     channel_type =  Column(String, nullable=False)  # Telegram/email
     destination = Column(String, nullable=False)  # chat_id/email
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, server_default=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
 
@@ -22,5 +21,5 @@ class Alert(Base):
     monitor_id = Column(Integer, ForeignKey("monitors.id"))
     error_message = Column(String, nullable=False)
     status_code = Column(Integer, nullable=True)
-    sent_at = Column(DateTime, server_default=func.now())
+    sent_at = Column(DateTime(timezone=True), server_default=func.now())
     status = Column(String, nullable=False)
