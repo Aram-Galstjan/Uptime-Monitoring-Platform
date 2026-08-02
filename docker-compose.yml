@@ -12,7 +12,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5432:5432"
+      - "5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d monitoring_db"]
       interval: 10s
@@ -25,7 +25,7 @@ services:
     image: redis:7-alpine
     container_name: monitoring_redis
     ports:
-      - "6379:6379"
+      - "6380:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -36,9 +36,9 @@ services:
     volumes:
       - redis_data:/data
 
-  api:
+  monitors-api:
     build:
-      context: ./api
+      context: ./python-services/monitors
       dockerfile: Dockerfile
     container_name: monitoring_api
     environment:
@@ -46,6 +46,23 @@ services:
       PORT: 8000
     ports:
       - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - monitoring_network
+    restart: unless-stopped
+
+  notifications-api:
+    build:
+      context: ./python-services/notifications
+      dockerfile: Dockerfile
+    container_name: notifications_api
+    environment:
+      DATABASE_URL: postgresql://postgres:monitoring_pass@postgres:5432/monitoring_db
+      PORT: 8001
+    ports:
+      - "8001:8001"
     depends_on:
       postgres:
         condition: service_healthy
