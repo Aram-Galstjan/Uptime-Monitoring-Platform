@@ -1,0 +1,2 @@
+-- Placeholder migration entrypoint for the Go monolith schemas.
+-- Concrete schema migrations should be split by bounded context.

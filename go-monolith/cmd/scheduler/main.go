@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"uptime-monitoring-platform/go-monolith/internal/checker/interfaces/worker"
+	"uptime-monitoring-platform/go-monolith/internal/scheduler/interfaces/cron"
 )
 
 func main() {
@@ -22,7 +22,7 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	if err := worker.RunScheduler(ctx); err != nil && err != context.Canceled {
+	if err := cron.RunScheduler(ctx); err != nil && err != context.Canceled {
 		return fmt.Errorf("run scheduler: %w", err)
 	}
 

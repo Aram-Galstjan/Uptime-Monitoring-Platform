@@ -1,3 +1,0 @@
-# checker
-
-Checker service scaffold.
